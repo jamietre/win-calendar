@@ -62,12 +62,12 @@ jobs:
           -p:PublishTrimmed=false
 
       - name: Build installer
-        shell: bash
+        shell: pwsh
         run: |
-          VERSION="${{ steps.version.outputs.value }}"
-          "C:/Program Files (x86)/Inno Setup 6/ISCC.exe" \
-            /DMyAppVersion="$VERSION" \
-            installer/setup.iss
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { $iscc = (Get-Command ISCC -ErrorAction Stop).Source }
+          & $iscc /DMyAppVersion="${{ steps.version.outputs.value }}" installer\setup.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
@@ -78,8 +78,10 @@ jobs:
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: installer/output/*.exe
-          generate_release_notes: true
-          fail_on_unmatched_files: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --generate-notes \
+            installer/output/*.exe
