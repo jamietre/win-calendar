@@ -1,0 +1,16 @@
+## .NET / C#
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+## NuGet
+packages/
+*.nupkg
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
