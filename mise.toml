@@ -1,0 +1,30 @@
+[tools]
+dotnet = "8"
+
+[tasks.restore]
+description = "Restore NuGet packages"
+run = "dotnet restore"
+
+[tasks.build]
+description = "Build the project (Debug)"
+run = "dotnet build src/WinCalendar/WinCalendar.csproj"
+
+[tasks.build-release]
+description = "Build the project (Release)"
+run = "dotnet build src/WinCalendar/WinCalendar.csproj -c Release"
+
+[tasks.publish]
+description = "Publish single-file executable (Release)"
+run = "dotnet publish src/WinCalendar/WinCalendar.csproj -c Release"
+
+[tasks.test]
+description = "Run unit tests"
+run = "dotnet test tests/WinCalendar.Tests/WinCalendar.Tests.csproj"
+
+[tasks.run]
+description = "Run the application"
+run = "dotnet run --project src/WinCalendar/WinCalendar.csproj"
+
+[tasks.clean]
+description = "Clean build output"
+run = "dotnet clean"

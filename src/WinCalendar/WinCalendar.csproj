@@ -11,6 +11,7 @@
     <RootNamespace>WinCalendar</RootNamespace>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>false</SelfContained>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <!-- Fixed Application ID for consistent taskbar/notification identity -->
     <ApplicationId>com.treworgy.WinCalendar</ApplicationId>
   </PropertyGroup>
