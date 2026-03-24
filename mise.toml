@@ -28,3 +28,12 @@ run = "dotnet run --project src/WinCalendar/WinCalendar.csproj"
 [tasks.clean]
 description = "Clean build output"
 run = "dotnet clean"
+
+[tasks.publish-installer]
+description = "Publish self-contained single-file exe for installer"
+run = "dotnet publish src/WinCalendar/WinCalendar.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false"
+
+[tasks.installer]
+description = "Build installer (requires Inno Setup 6)"
+depends = ["publish-installer"]
+run = "bash installer/build.sh"

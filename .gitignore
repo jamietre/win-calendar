@@ -14,3 +14,6 @@ packages/
 [Rr]elease/
 x64/
 x86/
+
+## Installer output
+installer/output/
