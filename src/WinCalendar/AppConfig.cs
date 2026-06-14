@@ -12,6 +12,8 @@ public class AppConfig
 
     public int FontSizeOffset { get; set; } = 0;
 
+    public int ToastMaxDurationHours { get; set; } = 24;
+
     /// <summary>
     /// List of calendar sources to fetch meetings from.
     /// Defaults to the file-based source if not configured.

@@ -194,10 +194,10 @@ public class ReminderService
         string title;
         if (stage.IsOverdue)
         {
-            var minutesLate = Math.Abs((int)meeting.MinutesUntilStart);
+            var overdueDisplay = FormatOverdueDuration(Math.Abs(meeting.MinutesUntilStart));
             title = stage.IsFinal
-                ? $"FINAL REMINDER: Meeting started {minutesLate} min ago!"
-                : $"Meeting started {minutesLate} min ago!";
+                ? $"FINAL REMINDER: Meeting started {overdueDisplay} ago!"
+                : $"Meeting started {overdueDisplay} ago!";
         }
         else if (meetingStarted)
         {
@@ -265,12 +265,11 @@ public class ReminderService
         // Set scenario and audio based on urgency
         if (stage.IsOverdue)
         {
-            // Overdue: urgent looping alarm
+            // Overdue: alarm plays once on appearance; screen flash provides the persistent urgency signal
             builder.SetToastScenario(ToastScenario.Alarm);
             builder.AddAudio(new ToastAudio
             {
-                Src = new Uri("ms-winsoundevent:Notification.Looping.Alarm2"),
-                Loop = true
+                Src = new Uri("ms-winsoundevent:Notification.Looping.Alarm2")
             });
         }
         else if (meetingStarted)
@@ -294,11 +293,13 @@ public class ReminderService
 
         // No default click action - clicking toast body does nothing
 
-        // Show with unique tag
+        // Show with unique tag and expiry
+        var maxHours = AppConfig.Instance.ToastMaxDurationHours;
         builder.Show(toast =>
         {
             toast.Tag = $"meeting-{key.GetHashCode():X}";
             toast.Group = "meetings";
+            toast.ExpirationTime = DateTimeOffset.Now.AddHours(maxHours);
         });
 
         // Screen flash for started/overdue meetings
@@ -331,6 +332,22 @@ public class ReminderService
             form.Close();
             Thread.Sleep(150);
         }
+    }
+
+    private static string FormatOverdueDuration(double minutesLate)
+    {
+        if (minutesLate < 1.0)
+        {
+            var seconds = Math.Max(1, (int)Math.Round(minutesLate * 60));
+            return $"{seconds} sec";
+        }
+        if (minutesLate < 60.0)
+        {
+            var minutes = (int)Math.Round(minutesLate);
+            return minutes == 1 ? "1 min" : $"{minutes} min";
+        }
+        var hours = (int)Math.Round(minutesLate / 60.0);
+        return hours == 1 ? "1 hour" : $"{hours} hours";
     }
 
     private static string? GetMeetingUrl(string? location)

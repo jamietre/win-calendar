@@ -21,7 +21,7 @@ public class DoubleBufferedForm : Form
 
 public class TrayApplicationContext : ApplicationContext
 {
-    private const string Version = "1.1.1";
+    private const string Version = "1.1.2";
 
     private readonly NotifyIcon _trayIcon;
     private readonly System.Windows.Forms.Timer _timer;
