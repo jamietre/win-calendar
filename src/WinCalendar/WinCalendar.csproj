@@ -13,7 +13,7 @@
     <SelfContained>false</SelfContained>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <!-- Fixed Application ID for consistent taskbar/notification identity -->
-    <ApplicationId>com.treworgy.WinCalendar</ApplicationId>
+    <ApplicationId>com.outsharked.WinCalendar</ApplicationId>
   </PropertyGroup>
 
   <ItemGroup>

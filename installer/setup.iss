@@ -1,8 +1,8 @@
 #define MyAppName "WinCalendar"
-#define MyAppVersion "1.1.1"
-#define MyAppPublisher "treworgy"
+#define MyAppVersion "1.3.0"
+#define MyAppPublisher "outsharked"
 #define MyAppExeName "WinCalendar.exe"
-#define MyAppId "com.treworgy.WinCalendar"
+#define MyAppId "com.outsharked.WinCalendar"
 #define PublishDir "..\src\WinCalendar\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish"
 
 [Setup]

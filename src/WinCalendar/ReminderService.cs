@@ -48,6 +48,32 @@ public class ReminderService
                 continue;
             }
 
+            // Check if Google auth is needed and show dialog
+            if (sourceConfig.Type.ToLowerInvariant() == "google" && !string.IsNullOrEmpty(sourceConfig.CredentialsPath))
+            {
+                var tokenPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    ".config", "win-calendar", "google-token");
+
+                if (!Directory.Exists(tokenPath) || !Directory.EnumerateFiles(tokenPath, "*", SearchOption.AllDirectories).Any())
+                {
+                    var result = MessageBox.Show(
+                        $"Google Calendar authentication is required for '{sourceConfig.DisplayName}'.\n\n" +
+                        "This will open a browser window for you to sign in with your Google account.\n\n" +
+                        "Click OK to authenticate now, or Cancel to skip this calendar source.",
+                        "Google Calendar Authentication Required",
+                        MessageBoxButtons.OKCancel,
+                        MessageBoxIcon.Information);
+
+                    if (result == DialogResult.Cancel)
+                    {
+                        Log($"User cancelled Google auth for: {sourceConfig.DisplayName}");
+                        sourceConfig.Enabled = false;
+                        configChanged = true;
+                        continue;
+                    }
+                }
+            }
+
             ICalendarSource? source = sourceConfig.Type.ToLowerInvariant() switch
             {
                 "file" when !string.IsNullOrEmpty(sourceConfig.Path) =>

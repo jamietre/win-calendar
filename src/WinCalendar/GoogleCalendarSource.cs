@@ -113,6 +113,7 @@ public class GoogleCalendarSource : ICalendarSource
                     Start = start,
                     End = end,
                     Location = eventItem.Location ?? eventItem.HangoutLink,
+                    EntryId = eventItem.Id,
                     Organizer = eventItem.Organizer?.Email,
                     RequiredAttendees = eventItem.Attendees?.Count(a => !a.Optional.GetValueOrDefault()) ?? 0,
                     OptionalAttendees = eventItem.Attendees?.Count(a => a.Optional.GetValueOrDefault()) ?? 0,
