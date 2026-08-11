@@ -1,5 +1,5 @@
 #define MyAppName "WinCalendar"
-#define MyAppVersion "1.3.0"
+#define MyAppVersion "1.3.1"
 #define MyAppPublisher "outsharked"
 #define MyAppExeName "WinCalendar.exe"
 #define MyAppId "com.outsharked.WinCalendar"

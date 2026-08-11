@@ -21,7 +21,7 @@ public class DoubleBufferedForm : Form
 
 public class TrayApplicationContext : ApplicationContext
 {
-    private const string Version = "1.3.0";
+    private const string Version = "1.3.1";
 
     private readonly NotifyIcon _trayIcon;
     private readonly System.Windows.Forms.Timer _timer;
@@ -679,7 +679,7 @@ public class TrayApplicationContext : ApplicationContext
                     AutoSize = true,
                     AutoSizeMode = AutoSizeMode.GrowOnly,
                     ColumnCount = 1,
-                    RowCount = isPast ? 2 : 4,
+                    RowCount = isPast ? 3 : 4,
                     BackColor = backColor,
                     Margin = new Padding(0),
                     Padding = new Padding(12, isPast ? 6 : 10, 12, isPast ? 8 : 14)
@@ -700,6 +700,7 @@ public class TrayApplicationContext : ApplicationContext
 
                 var originalBackColor = backColor;
                 var originalFontColor = fontColor;
+                var originalLinkColor = isPast ? fontColor : SystemColors.HotTrack;
 
                 trashButton.Click += (s, e) =>
                 {
@@ -746,7 +747,7 @@ public class TrayApplicationContext : ApplicationContext
                             if (ctrl is Label lbl && ctrl != trashButton)
                                 lbl.ForeColor = originalFontColor;
                             if (ctrl is LinkLabel link)
-                                link.LinkColor = SystemColors.HotTrack;
+                                link.LinkColor = originalLinkColor;
                         }
                     }
                 };
@@ -770,11 +771,11 @@ public class TrayApplicationContext : ApplicationContext
                     Font = config.GetFont(1),
                     ForeColor = fontColor,
                     BackColor = Color.Transparent,
-                    Margin = new Padding(0, 0, 0, isPast ? 0 : 4)
+                    Margin = new Padding(0, 0, 0, 4)
                 };
                 meetingPanel.Controls.Add(subjectLabel);
 
-                // Only show organizer and links for non-past meetings
+                // Organizer info only for non-past meetings
                 if (!isPast)
                 {
                     // Organizer and attendees info
@@ -794,93 +795,105 @@ public class TrayApplicationContext : ApplicationContext
                         Margin = new Padding(0, 0, 0, 8)
                     };
                     meetingPanel.Controls.Add(organizerLabel);
+                }
 
-                    var linksPanel = new FlowLayoutPanel
+                // Links panel: kept visible (grayed out) for past meetings so they stay clickable
+                var linksPanel = new FlowLayoutPanel
+                {
+                    AutoSize = true,
+                    AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                    FlowDirection = FlowDirection.LeftToRight,
+                    BackColor = Color.Transparent,
+                    Margin = new Padding(0, 0, 0, 0)
+                };
+
+                var linkColor = isPast ? fontColor : SystemColors.HotTrack;
+
+                var meetingUrl = ReminderService.GetMeetingUrlPublic(meeting.Location);
+                if (meetingUrl != null)
+                {
+                    var joinLink = new LinkLabel
                     {
+                        Text = "Join Meeting",
                         AutoSize = true,
-                        AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                        FlowDirection = FlowDirection.LeftToRight,
                         BackColor = Color.Transparent,
-                        Margin = new Padding(0, 0, 0, 0)
+                        Font = config.GetFont(1),
+                        Margin = new Padding(0, 0, 15, 0),
+                        LinkColor = linkColor,
+                        VisitedLinkColor = linkColor,
+                        ActiveLinkColor = linkColor
                     };
-
-                    var meetingUrl = ReminderService.GetMeetingUrlPublic(meeting.Location);
-                    if (meetingUrl != null)
+                    var url = meetingUrl;
+                    joinLink.Click += (s, e) =>
                     {
-                        var joinLink = new LinkLabel
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+                    };
+                    linksPanel.Controls.Add(joinLink);
+                }
+
+                if (!string.IsNullOrEmpty(meeting.EntryId))
+                {
+                    if (meeting.Source == "Google")
+                    {
+                        var googleLink = new LinkLabel
                         {
-                            Text = "Join Meeting",
+                            Text = "View in Google Calendar",
                             AutoSize = true,
                             BackColor = Color.Transparent,
                             Font = config.GetFont(1),
-                            Margin = new Padding(0, 0, 15, 0)
+                            LinkColor = linkColor,
+                            VisitedLinkColor = linkColor,
+                            ActiveLinkColor = linkColor
                         };
-                        var url = meetingUrl;
-                        joinLink.Click += (s, e) =>
+                        var eventId = meeting.EntryId;
+                        googleLink.Click += (s, e) =>
                         {
-                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+                            try
+                            {
+                                var url = $"https://calendar.google.com/calendar/u/0/r/eventedit/{eventId}";
+                                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+                            }
+                            catch (Exception ex)
+                            {
+                                _reminderService.Log($"Error opening Google Calendar: {ex.Message}");
+                            }
                         };
-                        linksPanel.Controls.Add(joinLink);
+                        linksPanel.Controls.Add(googleLink);
                     }
-
-                    if (!string.IsNullOrEmpty(meeting.EntryId))
+                    else
                     {
-                        if (meeting.Source == "Google")
+                        var outlookLink = new LinkLabel
                         {
-                            var googleLink = new LinkLabel
-                            {
-                                Text = "View in Google Calendar",
-                                AutoSize = true,
-                                BackColor = Color.Transparent,
-                                Font = config.GetFont(1)
-                            };
-                            var eventId = meeting.EntryId;
-                            googleLink.Click += (s, e) =>
-                            {
-                                try
-                                {
-                                    var url = $"https://calendar.google.com/calendar/u/0/r/eventedit/{eventId}";
-                                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
-                                }
-                                catch (Exception ex)
-                                {
-                                    _reminderService.Log($"Error opening Google Calendar: {ex.Message}");
-                                }
-                            };
-                            linksPanel.Controls.Add(googleLink);
-                        }
-                        else
+                            Text = "Open in Outlook",
+                            AutoSize = true,
+                            BackColor = Color.Transparent,
+                            Font = config.GetFont(1),
+                            LinkColor = linkColor,
+                            VisitedLinkColor = linkColor,
+                            ActiveLinkColor = linkColor
+                        };
+                        var entryId = meeting.EntryId;
+                        outlookLink.Click += (s, e) =>
                         {
-                            var outlookLink = new LinkLabel
+                            try
                             {
-                                Text = "Open in Outlook",
-                                AutoSize = true,
-                                BackColor = Color.Transparent,
-                                Font = config.GetFont(1)
-                            };
-                            var entryId = meeting.EntryId;
-                            outlookLink.Click += (s, e) =>
+                                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                                {
+                                    FileName = "outlook.exe",
+                                    Arguments = $"/select \"outlook:{entryId}\"",
+                                    UseShellExecute = true
+                                });
+                            }
+                            catch (Exception ex)
                             {
-                                try
-                                {
-                                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                                    {
-                                        FileName = "outlook.exe",
-                                        Arguments = $"/select \"outlook:{entryId}\"",
-                                        UseShellExecute = true
-                                    });
-                                }
-                                catch (Exception ex)
-                                {
-                                    _reminderService.Log($"Error opening Outlook: {ex.Message}");
-                                }
-                            };
-                            linksPanel.Controls.Add(outlookLink);
-                        }
+                                _reminderService.Log($"Error opening Outlook: {ex.Message}");
+                            }
+                        };
+                        linksPanel.Controls.Add(outlookLink);
                     }
-
-                    meetingPanel.Controls.Add(linksPanel);
                 }
+
+                meetingPanel.Controls.Add(linksPanel);
                 containerPanel.Controls.Add(meetingPanel);
 
                 // Add trash button (positioned in top-right corner)
