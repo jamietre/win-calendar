@@ -5,10 +5,15 @@ namespace WinCalendar;
 
 public class AppConfig
 {
-    private static readonly string ConfigFolder = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-        ".config", "win-calendar");
-    private static readonly string ConfigFile = Path.Combine(ConfigFolder, "config.json");
+    // Reads WINCALENDAR_CONFIG_DIR on each access (rather than caching once in a
+    // static readonly field) so tests can redirect config I/O to an isolated temp
+    // directory instead of the real user profile. Without this, any AppConfig
+    // instance built in a unit test (e.g. `new AppConfig { FontSizeOffset = x }`)
+    // still points at and overwrites the user's live config.json on Save().
+    private static string ConfigFolder =>
+        Environment.GetEnvironmentVariable("WINCALENDAR_CONFIG_DIR")
+        ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config", "win-calendar");
+    private static string ConfigFile => Path.Combine(ConfigFolder, "config.json");
 
     public int FontSizeOffset { get; set; } = 0;
 
